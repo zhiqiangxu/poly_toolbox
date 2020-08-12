@@ -13,7 +13,7 @@
 * GNU Lesser General Public License for more details.
 * You should have received a copy of the GNU Lesser General Public License
 * along with The poly network . If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package lib
 
 import (
@@ -29,12 +29,12 @@ func PolyCmd() *cobra.Command {
 	}
 
 	nmCmd.PersistentFlags().String(PolyRpcAddr, "", "set poly rpc address")
-	nmCmd.PersistentFlags().String(SignerWalletPath, "", "The signer's wallet file to sign poly transaction " +
+	nmCmd.PersistentFlags().String(SignerWalletPath, "", "The signer's wallet file to sign poly transaction "+
 		"registering candidate. ")
-	nmCmd.PersistentFlags().String(SignerWalletPwd, "", "The password for signer's wallet. " +
+	nmCmd.PersistentFlags().String(SignerWalletPwd, "", "The password for signer's wallet. "+
 		"If not set here, you will be required to input it. ")
 
-	nmCmd.AddCommand(PolyNMCmd(), PolyRMCmd(), PolySMCmd())
+	nmCmd.AddCommand(PolyNMCmd(), PolyRMCmd(), PolySMCmd(), PolyHeaderSyncCmd())
 
 	return nmCmd
 }
@@ -64,7 +64,7 @@ func PolyNMCmd() *cobra.Command {
 
 func RegisterCandidateCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use: "register_candidate [candidate_public_key]",
+		Use:   "register_candidate [candidate_public_key]",
 		Short: "introduce a new account to consensus. ",
 		Long: "Register a new candidate for node which want to be a new consensus node of Poly. " +
 			"Only one argument candidate's public key which can be found in candidate's wallet. ",
@@ -78,7 +78,7 @@ func ApproveCandidateCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "approve_candidate [candidate_public_key]",
 		Short: "approve candidate's registration",
-		Long: "Using consensus peer wallet to approve candidate's registration. ",
+		Long:  "Using consensus peer wallet to approve candidate's registration. ",
 		RunE:  ApproveCandidate,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -89,7 +89,7 @@ func UnRegisterCandidateCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "unregister_candidate",
 		Short: "cancel your relayer registration",
-		Long: "Unregister a candidate and only candidate can unregister itself. ",
+		Long:  "Unregister a candidate and only candidate can unregister itself. ",
 		RunE:  UnRegisterCandidate,
 	}
 	return c
@@ -99,7 +99,7 @@ func QuitNodeCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "quit_node",
 		Short: "leave the consensus peer set",
-		Long: "Quit from consensus peer pool of Poly. Signer must be quit-node itself. ",
+		Long:  "Quit from consensus peer pool of Poly. Signer must be quit-node itself. ",
 		RunE:  QuitNode,
 	}
 	return c
@@ -107,7 +107,7 @@ func QuitNodeCmd() *cobra.Command {
 
 func BlackNodeCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use: "black_node [node_public_key]",
+		Use:   "black_node [node_public_key]",
 		Short: "pull a node into the blacklist",
 		Long: "Vote for putting a node into black list on Poly. If over 2/3 consensus peers vote yes, that node will " +
 			"be blacked. It can't be consensus util it get moved from list. Signer must be a consensus account",
@@ -119,7 +119,7 @@ func BlackNodeCmd() *cobra.Command {
 
 func WhiteNodeCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use: "white_node [node_public_key]",
+		Use:   "white_node [node_public_key]",
 		Short: "pull a node out of the blacklist",
 		Long: "Vote for moving node out of black list on Poly. If over 2/3 consensus peers vote yes, that node will " +
 			"be whited. Signer must be a consensus account",
@@ -131,7 +131,7 @@ func WhiteNodeCmd() *cobra.Command {
 
 func CreateCommitDposTxCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use: "create_raw_commit_dpos_tx",
+		Use:   "create_raw_commit_dpos_tx",
 		Short: "create transaction that actively switch the consensus cycle",
 		Long: "Create a unsigned transaction for committing DPOS. Poly will step into next epoch of consensus if " +
 			"this transacion execute. ",
@@ -144,7 +144,7 @@ func CreateCommitDposTxCmd() *cobra.Command {
 
 func SignCommitDposTxCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use: "sign_commit_dpos_tx [raw_tx]",
+		Use:   "sign_commit_dpos_tx [raw_tx]",
 		Short: "sign transaction that actively switch the consensus cycle",
 		Long: "Using your wallet to sign a raw transaction and return the signed raw transaction. It will tell you " +
 			"if transaction is good to send. ",
@@ -156,7 +156,7 @@ func SignCommitDposTxCmd() *cobra.Command {
 
 func CreateUpdateConfigTxCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use: "create_update_config_tx [blockMsgDelay] [hashMsgDelay] [peerHandshakeTimeout] [maxBlockChangeView]",
+		Use:   "create_update_config_tx [blockMsgDelay] [hashMsgDelay] [peerHandshakeTimeout] [maxBlockChangeView]",
 		Short: "create transaction that update poly governance configuration",
 		Long: "Using your wallet to sign a raw transaction and return the signed raw transaction. It will tell you " +
 			"if transaction is good to send. ",
@@ -170,7 +170,7 @@ func CreateUpdateConfigTxCmd() *cobra.Command {
 
 func SignUpdateConfigTxCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use: "sign_update_config_tx [raw_tx]",
+		Use:   "sign_update_config_tx [raw_tx]",
 		Short: "sign transaction that update poly governance configuration",
 		Long: "Using your wallet to sign a raw transaction and return the signed raw transaction. It will tell you " +
 			"if transaction is good to send. ",
@@ -184,7 +184,7 @@ func PolyRMCmd() *cobra.Command {
 	rm := &cobra.Command{
 		Use:   "relayer_manager",
 		Short: "Poly relayer manager subcommands",
-		Long: "relayer manager control relayer accout set. Like becoming a relayer or be removed.",
+		Long:  "relayer manager control relayer accout set. Like becoming a relayer or be removed.",
 	}
 	rm.AddCommand(
 		RegisterRelayerCmd(),
@@ -200,8 +200,8 @@ func RegisterRelayerCmd() *cobra.Command {
 		Short: "register new addresses as poly relayer. ",
 		Long: "You can propose registration for a dozen of addresses in one transaction and toolbox " +
 			"will return the registration ID which is needed when approving. ",
-		RunE:  RegisterRelayer,
-		Args:  cobra.MinimumNArgs(1),
+		RunE: RegisterRelayer,
+		Args: cobra.MinimumNArgs(1),
 	}
 	return c
 }
@@ -210,7 +210,7 @@ func ApproveRegisterRelayerCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "approve_register_relayer [id]",
 		Short: "approve registration of proposal ID",
-		Long: "Consensus account approve the registration with the ID returned when registering.",
+		Long:  "Consensus account approve the registration with the ID returned when registering.",
 		RunE:  ApproveRegisterRelayer,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -221,7 +221,7 @@ func RemoveRelayerCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "remove_relayer [address] [address] ...",
 		Short: "remove addresses as poly relayer. ",
-		Long: "Remove address from relayer set with returning the proposal ID",
+		Long:  "Remove address from relayer set with returning the proposal ID",
 		RunE:  RemoveRelayer,
 	}
 	return c
@@ -231,7 +231,7 @@ func ApproveRemoveRelayerCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "approve_remove_relayer [id]",
 		Short: "approve removing proposal ID as poly relayer. ",
-		Long: "Consensus account approve the relayer removing with the ID returned when removing.",
+		Long:  "Consensus account approve the relayer removing with the ID returned when removing.",
 		RunE:  ApproveRemoveRelayer,
 	}
 	return c
@@ -260,7 +260,7 @@ func RegisterSideChainCmd() *cobra.Command {
 		Short: "register a new chain",
 		Long: "Sending transaction to register a new chain in cross-chain system. You need to " +
 			"set parameters in flags including chain_id, router, name, blocks_to_wait and CMCC. ",
-		RunE:  RegisterSideChain,
+		RunE: RegisterSideChain,
 	}
 
 	c.Flags().Uint64(ChainId, 0, "set chain id for new chain")
@@ -276,7 +276,7 @@ func ApproveRegisterSideChainCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "approve_register_side_chain",
 		Short: "approve registration of chain-id",
-		Long: "Consensus account approve the side chain registration with the chain-id.",
+		Long:  "Consensus account approve the side chain registration with the chain-id.",
 		RunE:  ApproveRegisterSideChain,
 	}
 
@@ -292,7 +292,7 @@ func UpdateSideChainCmd() *cobra.Command {
 		Long: "Send transaction to make a proposal for updating chain configuration. Only " +
 			"account registering this chain. You need to set parameters in flags including " +
 			"chain_id, router, name, blocks_to_wait and CMCC.",
-		RunE:  UpdateSideChain,
+		RunE: UpdateSideChain,
 	}
 
 	c.Flags().Uint64(ChainId, 0, "set chain id for new chain")
@@ -310,7 +310,7 @@ func ApproveUpdateSideChainCmd() *cobra.Command {
 		Short: "approve update side chain information. ",
 		Long: "Approve the proposal for updating the chain of chain-id. Only consensus accounts " +
 			"can send transaction to approve.",
-		RunE:  ApproveUpdateSideChain,
+		RunE: ApproveUpdateSideChain,
 	}
 
 	c.Flags().Uint64(ChainId, 0, "set chain id to identify the chain")
@@ -324,7 +324,7 @@ func QuitSideChainCmd() *cobra.Command {
 		Short: "make the side chain quit cross-chain system.",
 		Long: "Make a proposal to remove a chain from cross-chain system. Only account registering " +
 			"this chain can do this. ",
-		RunE:  QuitSideChain,
+		RunE: QuitSideChain,
 	}
 
 	c.Flags().Uint64(ChainId, 0, "set chain id to identify the chain")
@@ -338,10 +338,79 @@ func ApproveQuitSideChainCmd() *cobra.Command {
 		Short: "approve quit side chain. only consensus accounts.",
 		Long: "Approve the proposal that try to remove a side chain from cross-chain system. " +
 			"Only consensus accounts can send transaction to approve.",
-		RunE:  ApproveQuitSideChain,
+		RunE: ApproveQuitSideChain,
 	}
 
 	c.Flags().Uint64(ChainId, 0, "set chain id to identify the chain")
 
+	return c
+}
+
+func PolyHeaderSyncCmd() *cobra.Command {
+	sm := &cobra.Command{
+		Use:   "header_sync",
+		Short: "sync genesis header subcommands",
+		Long:  "Sync genesis headers to Poly. After this, the chains registered on Poly are good to cross chain. ",
+	}
+	sm.AddCommand(
+		CreateSyncOntGenesisHdrTxCmd(),
+		CreateSyncEthGenesisHdrTxCmd(),
+		CreateSyncSwticheoGenesisHdrTxCmd(),
+		SignPolyMultiSigTxCmd())
+	return sm
+}
+
+func CreateSyncOntGenesisHdrTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "create_sync_ont_genesis_hdr_tx [ont_chain_id] [ont_hdr_height]",
+		Short: "create transaction to sync ontology epoch switching header to Poly.",
+		RunE:  CreateSyncOntGenesisHdrToPolyTx,
+	}
+
+	c.Flags().String(OntRpcAddr, "", "ontology node RPC address")
+	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
+	_ = c.MarkFlagRequired(ConsensusPubKeys)
+	_ = c.MarkFlagRequired(OntRpcAddr)
+
+	return c
+}
+
+func CreateSyncEthGenesisHdrTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "create_sync_eth_genesis_hdr_tx [eth_chain_id] [eth_hdr_height]",
+		Short: "create transaction to sync ethereum header to Poly.",
+		RunE:  CreateSyncEthGenesisHdrToPolyTx,
+	}
+
+	c.Flags().String(EthRpcAddr, "", "ethereum node RPC address")
+	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
+	_ = c.MarkFlagRequired(ConsensusPubKeys)
+	_ = c.MarkFlagRequired(EthRpcAddr)
+
+	return c
+}
+
+func CreateSyncSwticheoGenesisHdrTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "create_sync_switcheo_genesis_hdr_tx [swth_chain_id] [swth_hdr_height]",
+		Short: "create transaction to sync Switcheo header to Poly.",
+		RunE:  CreateSyncSwthGenesisHdrToPolyTx,
+	}
+
+	c.Flags().String(SwitcheoRpcAddr, "", "Switcheo node RPC address")
+	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
+	_ = c.MarkFlagRequired(SwitcheoRpcAddr)
+	_ = c.MarkFlagRequired(ConsensusPubKeys)
+
+	return c
+}
+
+func SignPolyMultiSigTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "sign_poly_multisig_tx [raw_tx]",
+		Short: "sign multisig transaction of Poly",
+		RunE:  SignPolyMultiSigTx,
+		Args:  cobra.ExactArgs(1),
+	}
 	return c
 }

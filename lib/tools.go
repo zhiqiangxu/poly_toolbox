@@ -13,21 +13,24 @@
 * GNU Lesser General Public License for more details.
 * You should have received a copy of the GNU Lesser General Public License
 * along with The poly network . If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package lib
 
 import (
 	"encoding/hex"
 	"fmt"
 	"github.com/ontio/ontology-crypto/keypair"
+	"github.com/ontio/ontology-go-sdk"
 	"github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/poly/common"
 	"github.com/polynetwork/poly/consensus/vbft/config"
 	"github.com/polynetwork/poly/core/payload"
 	"github.com/polynetwork/poly/core/types"
 	"github.com/polynetwork/poly/native/service/governance/node_manager"
+	"github.com/polynetwork/poly/native/service/header_sync/cosmos"
 	"github.com/polynetwork/poly/native/states"
 	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/rpc/client"
 	"strconv"
 	"strings"
 )
@@ -608,6 +611,231 @@ func ApproveQuitSideChain(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Printf("successful to approve quit chain: ( acc: %s, txhash: %s, chain-id: %d )\n",
 		acc.Address.ToBase58(), txhash.ToHexString(), chainId)
+
+	return nil
+}
+
+func CreateSyncOntGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
+	id, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+	h, err := strconv.ParseUint(args[1], 10, 64)
+	if err != nil {
+		return err
+	}
+	ontRpc, err := cmd.Flags().GetString(OntRpcAddr)
+	if err != nil {
+		return err
+	}
+	ont := ontology_go_sdk.NewOntologySdk()
+	ont.NewRpcClient().SetAddress(ontRpc)
+	blk, err := ont.GetBlockByHeight(uint32(h))
+	if err != nil {
+		return err
+	}
+
+	poly := poly_go_sdk.NewPolySdk()
+	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, blk.Header.ToArray())
+	if err != nil {
+		return err
+	}
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	str, err := cmd.Flags().GetString(ConsensusPubKeys)
+	pks := strings.Split(str, ",")
+	if err != nil {
+		return err
+	}
+	for i, v := range pks {
+		pk, err := vconfig.Pubkey(v)
+		if err != nil {
+			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
+		}
+		pubKeys = append(pubKeys, pk)
+	}
+
+	tx.Sigs = append(tx.Sigs, types.Sig{
+		SigData: make([][]byte, 0),
+		M:       uint16((5*len(pubKeys) + 6) / 7),
+		PubKeys: pubKeys,
+	})
+	sink := common.NewZeroCopySink(nil)
+	if err := tx.Serialization(sink); err != nil {
+		return err
+	}
+
+	fmt.Printf("raw transaction is %s\nNeed to send this transaction to every single consensus peer to sign. \n",
+		hex.EncodeToString(sink.Bytes()))
+	return nil
+}
+
+func CreateSyncEthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
+	id, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+	h, err := strconv.ParseUint(args[1], 10, 64)
+	if err != nil {
+		return err
+	}
+	ethRpc, err := cmd.Flags().GetString(EthRpcAddr)
+	if err != nil {
+		return err
+	}
+	et := NewEthTools(ethRpc)
+	hdr, err := et.GetBlockHeader(h)
+	if err != nil {
+		return err
+	}
+	raw, err := hdr.MarshalJSON()
+	if err != nil {
+		return err
+	}
+
+	poly := poly_go_sdk.NewPolySdk()
+	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
+	if err != nil {
+		return err
+	}
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	str, err := cmd.Flags().GetString(ConsensusPubKeys)
+	pks := strings.Split(str, ",")
+	if err != nil {
+		return err
+	}
+	for i, v := range pks {
+		pk, err := vconfig.Pubkey(v)
+		if err != nil {
+			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
+		}
+		pubKeys = append(pubKeys, pk)
+	}
+
+	tx.Sigs = append(tx.Sigs, types.Sig{
+		SigData: make([][]byte, 0),
+		M:       uint16((5*len(pubKeys) + 6) / 7),
+		PubKeys: pubKeys,
+	})
+	sink := common.NewZeroCopySink(nil)
+	if err := tx.Serialization(sink); err != nil {
+		return err
+	}
+
+	fmt.Printf("raw transaction is %s\nNeed to send this transaction to every single consensus peer to sign. \n",
+		hex.EncodeToString(sink.Bytes()))
+	return nil
+}
+
+func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
+	id, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+	h, err := strconv.ParseUint(args[1], 10, 64)
+	if err != nil {
+		return err
+	}
+	swthRpc, err := cmd.Flags().GetString(SwitcheoRpcAddr)
+	if err != nil {
+		return err
+	}
+	rpcCli, err := client.NewHTTP(swthRpc, "/websocket")
+	if err != nil {
+		return err
+	}
+	height := int64(h)
+	res, err := rpcCli.Commit(&height)
+	if err != nil {
+		return err
+	}
+	vals, err := getValidators(rpcCli, height)
+	if err != nil {
+		panic(err)
+	}
+	ch := &cosmos.CosmosHeader{
+		Header:  *res.Header,
+		Commit:  res.Commit,
+		Valsets: vals,
+	}
+	cdc := NewCodec()
+	raw, err := cdc.MarshalBinaryBare(ch)
+	if err != nil {
+		return err
+	}
+
+	poly := poly_go_sdk.NewPolySdk()
+	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
+	if err != nil {
+		return err
+	}
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	str, err := cmd.Flags().GetString(ConsensusPubKeys)
+	pks := strings.Split(str, ",")
+	if err != nil {
+		return err
+	}
+	for i, v := range pks {
+		pk, err := vconfig.Pubkey(v)
+		if err != nil {
+			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
+		}
+		pubKeys = append(pubKeys, pk)
+	}
+
+	tx.Sigs = append(tx.Sigs, types.Sig{
+		SigData: make([][]byte, 0),
+		M:       uint16((5*len(pubKeys) + 6) / 7),
+		PubKeys: pubKeys,
+	})
+	sink := common.NewZeroCopySink(nil)
+	if err := tx.Serialization(sink); err != nil {
+		return err
+	}
+
+	fmt.Printf("raw transaction is %s\nNeed to send this transaction to every single consensus peer to sign. \n",
+		hex.EncodeToString(sink.Bytes()))
+	return nil
+}
+
+func SignPolyMultiSigTx(cmd *cobra.Command, args []string) error {
+	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	if err != nil {
+		return err
+	}
+
+	tx := &types.Transaction{}
+	raw, err := hex.DecodeString(args[0])
+	if err != nil {
+		return err
+	}
+	if err := tx.Deserialization(common.NewZeroCopySource(raw)); err != nil {
+		return err
+	}
+
+	if err = poly.MultiSignToTransaction(tx, tx.Sigs[0].M, tx.Sigs[0].PubKeys, acc); err != nil {
+		return fmt.Errorf("multi sign failed, err: %s", err)
+	}
+
+	sink := common.NewZeroCopySink(nil)
+	err = tx.Serialization(sink)
+	if err != nil {
+		return err
+	}
+
+	if uint16(len(tx.Sigs[0].SigData)) >= tx.Sigs[0].M {
+		txhash, err := poly.SendTransaction(tx)
+		if err != nil {
+			return fmt.Errorf("failed to send tx to poly: %v\nRaw Tx: %s\n", err, hex.EncodeToString(sink.Bytes()))
+		}
+		WaitPolyTx(txhash, poly)
+		fmt.Printf("successful to sign poly tx and send tx %s to Poly with enough sigs\n", txhash.ToHexString())
+		return nil
+	}
+	fmt.Printf("successful to sign tx and %d/%d sigs now, need at least %d sig: raw tx: %s\n", len(tx.Sigs[0].SigData),
+		len(tx.Sigs[0].PubKeys), tx.Sigs[0].M, hex.EncodeToString(sink.Bytes()))
 
 	return nil
 }
