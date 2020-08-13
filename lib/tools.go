@@ -19,10 +19,13 @@ package lib
 import (
 	"encoding/hex"
 	"fmt"
+	types2 "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/ontology-go-sdk"
+	"github.com/polynetwork/cosmos-poly-module/headersync"
 	"github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/poly/common"
+	"github.com/polynetwork/poly/common/password"
 	"github.com/polynetwork/poly/consensus/vbft/config"
 	"github.com/polynetwork/poly/core/payload"
 	"github.com/polynetwork/poly/core/types"
@@ -30,7 +33,7 @@ import (
 	"github.com/polynetwork/poly/native/service/header_sync/cosmos"
 	"github.com/polynetwork/poly/native/states"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/rpc/client"
+	"github.com/tendermint/tendermint/rpc/client/http"
 	"strconv"
 	"strings"
 )
@@ -741,7 +744,7 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	rpcCli, err := client.NewHTTP(swthRpc, "/websocket")
+	rpcCli, err := http.New(swthRpc, "/websocket")
 	if err != nil {
 		return err
 	}
@@ -836,6 +839,81 @@ func SignPolyMultiSigTx(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Printf("successful to sign tx and %d/%d sigs now, need at least %d sig: raw tx: %s\n", len(tx.Sigs[0].SigData),
 		len(tx.Sigs[0].PubKeys), tx.Sigs[0].M, hex.EncodeToString(sink.Bytes()))
+
+	return nil
+}
+
+func SyncPolyHdrToSwitcheo(cmd *cobra.Command, args []string) error {
+	swthRpc, err := cmd.Flags().GetString(SwitcheoRpcAddr)
+	if err != nil {
+		return err
+	}
+	swthWallet, err := cmd.Flags().GetString(SwitcheoWallet)
+	if err != nil {
+		return err
+	}
+	swthPwd, err := cmd.Flags().GetString(SwitcheoWalletPwd)
+	if err != nil {
+		return err
+	}
+	if swthPwd == "" {
+		fmt.Println("Pleasae input your switcheo wallet password...")
+		pwd, err := password.GetPassword()
+		if err != nil {
+			return fmt.Errorf("getPassword error:", err)
+		}
+		swthPwd = string(pwd)
+	}
+	polyRpc, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	h, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+	gas, err := strconv.ParseUint(args[1], 10, 64)
+	if err != nil {
+		return err
+	}
+	gasPrice, err := types2.ParseDecCoins(args[2])
+	if err != nil {
+		return err
+	}
+	fees, err := CalcCosmosFees(gasPrice, gas)
+	if err != nil {
+		return err
+	}
+
+	cli, err := http.New(swthRpc, "/websocket")
+	if err != nil {
+		return err
+	}
+
+	poly := poly_go_sdk.NewPolySdk()
+	poly.NewRpcClient().SetAddress(polyRpc)
+	hdr, err := poly.GetHeaderByHeight(uint32(h))
+	if err != nil {
+		return err
+	}
+	cdc := NewCodec()
+	acc, err := NewCosmosAcc(swthWallet, swthPwd, cli, cdc)
+	if err != nil {
+		return err
+	}
+
+	res, seq, err := SendCosmosTx([]types2.Msg{&headersync.MsgSyncGenesisParam{
+		Syncer:        acc.Acc,
+		GenesisHeader: hex.EncodeToString(hdr.ToArray()),
+	}}, acc, gas, fees, cdc, cli)
+	if err != nil {
+		return err
+	}
+	WaitSwitcheoTx(res.Hash, cli)
+
+	hash := hdr.Hash()
+	fmt.Printf("successful to sync poly header (hash: %s, height: %d) to Switcheo: (swth_txhash: %s, acc_seq: %d)\n",
+		hash.ToHexString(), hdr.Height, res.Hash.String(), seq)
 
 	return nil
 }

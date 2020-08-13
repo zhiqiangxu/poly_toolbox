@@ -414,3 +414,45 @@ func SignPolyMultiSigTxCmd() *cobra.Command {
 	}
 	return c
 }
+
+func SwitcheoCmd() *cobra.Command {
+	sc := &cobra.Command{
+		Use:   "switcheo",
+		Short: "swticheo subcommands",
+		Long:  "This command handles all functions about Switcheo, like syncing " +
+			"genesis headers of Poly to Switcheo, etc. ",
+	}
+
+	sc.PersistentFlags().String(SwitcheoRpcAddr, "", "switcheo rpc address")
+	sc.PersistentFlags().String(SwitcheoWallet, "", "switcheo wallet path")
+	sc.PersistentFlags().String(SignerWalletPwd, "", "switcheo wallet password")
+
+	sc.AddCommand(
+		SyncPolyGenesisHdrToSwitcheoCmd())
+
+	return sc
+}
+
+func SyncPolyGenesisHdrToSwitcheoCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "sync_poly_genesis_hdr_to_switcheo [height] [swth_gas] [swth_price]",
+		Short: "sync genesis header of poly to switcheo",
+		RunE: SyncPolyHdrToSwitcheo,
+		Args:  cobra.ExactArgs(3),
+	}
+
+	c.Flags().String(PolyRpcAddr, "", "poly node rpc address")
+
+	return c
+}
+
+//func EthereumCmd() *cobra.Command {
+//	ec := &cobra.Command{
+//		Use:   "switcheo",
+//		Short: "swticheo subcommands",
+//		Long:  "This command handles all functions about Switcheo, like syncing " +
+//			"genesis headers of Poly to Switcheo, etc. ",
+//	}
+//
+//	ec.PersistentFlags().String(EthRpcAddr)
+//}

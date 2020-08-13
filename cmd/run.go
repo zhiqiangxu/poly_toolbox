@@ -31,7 +31,9 @@ func main() {
 	}
 
 	rootCmd.DisableFlagsInUseLine = true
-	rootCmd.AddCommand(lib.PolyCmd())
+	rootCmd.AddCommand(
+		lib.PolyCmd(),
+		lib.SwitcheoCmd())
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Printf("failed to run: %v", err)
 		os.Exit(1)

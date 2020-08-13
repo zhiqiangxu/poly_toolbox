@@ -21,10 +21,13 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	types3 "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	common2 "github.com/ethereum/go-ethereum/common"
@@ -39,28 +42,37 @@ import (
 	"github.com/polynetwork/poly/common"
 	"github.com/polynetwork/poly/common/password"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/rpc/client"
+	"github.com/tendermint/tendermint/crypto"
+	bytes2 "github.com/tendermint/tendermint/libs/bytes"
+	http2 "github.com/tendermint/tendermint/rpc/client/http"
+	"github.com/tendermint/tendermint/rpc/core/types"
 	types2 "github.com/tendermint/tendermint/types"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 const (
-	SignerWalletPath = "signer_wallet_path"
-	SignerWalletPwd  = "signer_wallet_pwd"
-	PolyRpcAddr      = "rpc_addr"
-	ConsensusPubKeys = "consensus_public_keys"
-	ChainId          = "chain_id"
-	Router           = "router"
-	Name             = "name"
-	BlkToWait        = "blocks_to_wait"
-	CMCC             = "CMCC"
-	OntRpcAddr       = "ont_rpc"
-	EthRpcAddr       = "eth_rpc"
-	SwitcheoRpcAddr  = "switcheo_rpc"
+	SignerWalletPath      = "signer_wallet_path"
+	SignerWalletPwd       = "signer_wallet_pwd"
+	PolyRpcAddr           = "poly_rpc_addr"
+	ConsensusPubKeys      = "consensus_public_keys"
+	ChainId               = "chain_id"
+	Router                = "router"
+	Name                  = "name"
+	BlkToWait             = "blocks_to_wait"
+	CMCC                  = "CMCC"
+	OntRpcAddr            = "ont_rpc"
+	EthRpcAddr            = "eth_rpc"
+	SwitcheoRpcAddr       = "switcheo_rpc"
+	SwitcheoWallet        = "switcheo_wallet"
+	SwitcheoWalletPwd     = "switcheo_wallet_pwd"
+	SwitcheoCosmosChainID = "switcheochain"
+	BroadcastConnTimeOut  = "connection timed out"
+	SeqErr                = "verify correct account sequence and chain-id"
 )
 
 func GetPolyAccountByPassword(asdk *poly_go_sdk.PolySdk, path, pwdStr string) (*poly_go_sdk.Account, error) {
@@ -366,7 +378,7 @@ func (self *RestClient) SendRestRequestWithAuth(data []byte) ([]byte, error) {
 	return body, nil
 }
 
-func getValidators(rpc *client.HTTP, h int64) ([]*types2.Validator, error) {
+func getValidators(rpc *http2.HTTP, h int64) ([]*types2.Validator, error) {
 	p := 1
 	vSet := make([]*types2.Validator, 0)
 	for {
@@ -399,4 +411,133 @@ func NewCodec() *codec.Codec {
 	headersync.RegisterCodec(cdc)
 	lockproxy.RegisterCodec(cdc)
 	return cdc
+}
+
+type CosmosAcc struct {
+	Acc        types3.AccAddress
+	PrivateKey crypto.PrivKey
+	Seq        *CosmosSeq
+	AccNum     uint64
+}
+
+func NewCosmosAcc(wallet, pwd string, cli *http2.HTTP, cdc *codec.Codec) (*CosmosAcc, error) {
+	acc := &CosmosAcc{}
+	bz, err := ioutil.ReadFile(wallet)
+	if err != nil {
+		return nil, err
+	}
+
+	privKey, _, err := mintkey.UnarmorDecryptPrivKey(string(bz), string(pwd))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt private key: v", err)
+	}
+
+	acc.PrivateKey = privKey
+	acc.Acc = types3.AccAddress(privKey.PubKey().Address().Bytes())
+	var eAcc exported.Account
+	rawParam, err := cdc.MarshalJSON(auth.NewQueryAccountParams(acc.Acc))
+	if err != nil {
+		return nil, err
+	}
+	res, err := cli.ABCIQuery("/custom/acc/account", rawParam)
+	if err != nil {
+		return nil, err
+	}
+	if !res.Response.IsOK() {
+		return nil, fmt.Errorf("failed to get response for accout-query: %v", res.Response)
+	}
+	if err := cdc.UnmarshalJSON(res.Response.Value, &eAcc); err != nil {
+		return nil, fmt.Errorf("unmarshal query-account-resp failed, err: %v", err)
+	}
+	acc.Seq = &CosmosSeq{
+		lock: sync.Mutex{},
+		val:  eAcc.GetSequence(),
+	}
+	acc.AccNum = eAcc.GetAccountNumber()
+
+	return acc, nil
+}
+
+type CosmosSeq struct {
+	lock sync.Mutex
+	val  uint64
+}
+
+func (seq *CosmosSeq) GetAndAdd() uint64 {
+	seq.lock.Lock()
+	defer func() {
+		seq.val += 1
+		seq.lock.Unlock()
+	}()
+	return seq.val
+}
+
+func SendCosmosTx(msgs []types3.Msg, acc *CosmosAcc, gas uint64, fees types3.Coins, cdc *codec.Codec, cli *http2.HTTP) (*coretypes.ResultBroadcastTx, uint64, error) {
+	seq := acc.Seq.GetAndAdd()
+	toSign := auth.StdSignMsg{
+		Sequence:      seq,
+		AccountNumber: acc.AccNum,
+		ChainID:       SwitcheoCosmosChainID,
+		Msgs:          msgs,
+		Fee:           auth.NewStdFee(gas, fees),
+	}
+	sig, err := acc.PrivateKey.Sign(toSign.Bytes())
+	if err != nil {
+		return nil, seq, fmt.Errorf("failed to sign raw tx: (error: %v, raw tx: %x)", err, toSign.Bytes())
+	}
+
+	tx := auth.NewStdTx(msgs, toSign.Fee, []auth.StdSignature{{acc.PrivateKey.PubKey(), sig}}, toSign.Memo)
+	encoder := auth.DefaultTxEncoder(cdc)
+	rawTx, err := encoder(tx)
+	if err != nil {
+		return nil, seq, fmt.Errorf("failed to encode signed tx: %v", err)
+	}
+	var res *coretypes.ResultBroadcastTx
+	for {
+		res, err = cli.BroadcastTxSync(rawTx)
+		if err != nil {
+			if strings.Contains(err.Error(), BroadcastConnTimeOut) {
+				time.Sleep(10 * time.Second)
+				continue
+			}
+			return nil, seq, fmt.Errorf("failed to broadcast tx: (error: %v, raw tx: %x)", err, rawTx)
+		}
+		if res.Code != 0 {
+			if strings.Contains(res.Log, SeqErr) {
+				time.Sleep(time.Second)
+				continue
+			}
+			return nil, seq, fmt.Errorf("failed to check tx: (code: %d, sequence: %d, log: %s)", res.Code, seq, res.Log)
+		} else {
+			break
+		}
+	}
+
+	return res, seq, nil
+}
+
+func CalcCosmosFees(gasPrice types3.DecCoins, gas uint64) (types3.Coins, error) {
+	if gasPrice.IsZero() {
+		return types3.Coins{}, errors.New("gas price is zero")
+	}
+	if gas == 0 {
+		return types3.Coins{}, errors.New("gas is zero")
+	}
+	glDec := types3.NewDec(int64(gas))
+	fees := make(types3.Coins, len(gasPrice))
+	for i, gp := range gasPrice {
+		fee := gp.Amount.Mul(glDec)
+		fees[i] = types3.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+	}
+	return fees, nil
+}
+
+func WaitSwitcheoTx(txhash bytes2.HexBytes, cli *http2.HTTP) {
+	tick := time.NewTicker(time.Second)
+	for range tick.C {
+		res, err := cli.Tx(txhash, false)
+		if err == nil && res.Height > 0 {
+			break
+		}
+	}
 }
