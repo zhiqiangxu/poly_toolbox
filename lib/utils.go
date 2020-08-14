@@ -68,6 +68,7 @@ const (
 	OntRpcAddr            = "ont_rpc"
 	EthRpcAddr            = "eth_rpc"
 	SwitcheoRpcAddr       = "switcheo_rpc"
+	NeoRpcAddr            = "neo_rpc"
 	SwitcheoWallet        = "switcheo_wallet"
 	SwitcheoWalletPwd     = "switcheo_wallet_pwd"
 	SwitcheoCosmosChainID = "switcheochain"

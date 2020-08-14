@@ -356,6 +356,7 @@ func PolyHeaderSyncCmd() *cobra.Command {
 		CreateSyncOntGenesisHdrTxCmd(),
 		CreateSyncEthGenesisHdrTxCmd(),
 		CreateSyncSwticheoGenesisHdrTxCmd(),
+		CreateSyncNeoGenesisHdrTxCmd(),
 		SignPolyMultiSigTxCmd())
 	return sm
 }
@@ -412,6 +413,21 @@ func SignPolyMultiSigTxCmd() *cobra.Command {
 		RunE:  SignPolyMultiSigTx,
 		Args:  cobra.ExactArgs(1),
 	}
+	return c
+}
+
+func CreateSyncNeoGenesisHdrTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "create_sync_neo_genesis_hdr_tx [neo_chain_id] [height]",
+		Short: "create transaction to sync NEO header to Poly.",
+		RunE: CreateSyncNeoGenesisHdrTx,
+	}
+
+	c.Flags().String(NeoRpcAddr, "", "NEO node RPC address")
+	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
+	_ = c.MarkFlagRequired(NeoRpcAddr)
+	_ = c.MarkFlagRequired(ConsensusPubKeys)
+
 	return c
 }
 

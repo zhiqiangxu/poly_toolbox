@@ -20,6 +20,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	types2 "github.com/cosmos/cosmos-sdk/types"
+	"github.com/joeqian10/neo-gogogo/block"
+	"github.com/joeqian10/neo-gogogo/helper/io"
+	"github.com/joeqian10/neo-gogogo/rpc"
 	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/ontology-go-sdk"
 	"github.com/polynetwork/cosmos-poly-module/headersync"
@@ -770,6 +773,69 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	poly := poly_go_sdk.NewPolySdk()
 	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
+	if err != nil {
+		return err
+	}
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	str, err := cmd.Flags().GetString(ConsensusPubKeys)
+	pks := strings.Split(str, ",")
+	if err != nil {
+		return err
+	}
+	for i, v := range pks {
+		pk, err := vconfig.Pubkey(v)
+		if err != nil {
+			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
+		}
+		pubKeys = append(pubKeys, pk)
+	}
+
+	tx.Sigs = append(tx.Sigs, types.Sig{
+		SigData: make([][]byte, 0),
+		M:       uint16((5*len(pubKeys) + 6) / 7),
+		PubKeys: pubKeys,
+	})
+	sink := common.NewZeroCopySink(nil)
+	if err := tx.Serialization(sink); err != nil {
+		return err
+	}
+
+	fmt.Printf("raw transaction is %s\nNeed to send this transaction to every single consensus peer to sign. \n",
+		hex.EncodeToString(sink.Bytes()))
+	return nil
+}
+
+func CreateSyncNeoGenesisHdrTx(cmd *cobra.Command, args []string) error {
+	id, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+	h, err := strconv.ParseUint(args[1], 10, 64)
+	if err != nil {
+		return err
+	}
+	rpcAddr, err := cmd.Flags().GetString(NeoRpcAddr)
+	if err != nil {
+		return err
+	}
+	cli := rpc.NewClient(rpcAddr)
+	resp := cli.GetBlockHeaderByIndex(uint32(h))
+	if resp.HasError() {
+		return fmt.Errorf("failed to get header: %v", resp.Error.Message)
+	}
+	header, err := block.NewBlockHeaderFromRPC(&resp.Result)
+	if err != nil {
+		return err
+	}
+	buf := io.NewBufBinaryWriter()
+	header.Serialize(buf.BinaryWriter)
+	if buf.Err != nil {
+		return buf.Err
+	}
+
+	poly := poly_go_sdk.NewPolySdk()
+	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, buf.Bytes())
 	if err != nil {
 		return err
 	}

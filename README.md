@@ -67,7 +67,7 @@ Consensus account can approve registration of a side chain with the chain-id.
 Create a raw transaction to sync Ontology genesis header to Poly. Noted, you must set all public keys of multisig address.
 
 ```
-./toolbox poly header_sync create_sync_ont_genesis_hdr_tx [chain-id] [height] --consensus_public_keys=pub1,pub2,pub3 --ont_rpc="http://ontology:20336" --poly_rpc_addr="http://poly_rpc_addr" --signer_wallet_path=/path/to/wallet.dat
+./toolbox poly header_sync create_sync_ont_genesis_hdr_tx [chain-id] [height] --consensus_public_keys=pub1,pub2,pub3 --ont_rpc="http://ontology:20336" 
 ```
 
 ### Sign Multisig Transacion of Poly
@@ -85,10 +85,22 @@ Create a poly transaction for syncing Switcheo genesis header to Poly. You need 
 Run the follow and get the raw transaction:
 
 ```
-./toolbox poly header_sync create_sync_switcheo_genesis_hdr_tx [swth_chain_id] [swth_hdr_height] --switcheo_rpc="http://switcheo_rpc" --consensus_public_keys=pub1,pub2,pub3 --poly_rpc_addr="http://poly_rpc_addr" --signer_wallet_path=/path/to/wallet.dat
+./toolbox poly header_sync create_sync_switcheo_genesis_hdr_tx [swth_chain_id] [swth_hdr_height] --switcheo_rpc="http://switcheo_rpc" --consensus_public_keys=pub1,pub2,pub3 
 ```
 
 So you have the raw transaction of Poly and you need to sign this transaction using `./toolbox poly header_sync sign_poly_multisig_tx` which has already been introduced above. After signing, you need to send it to next signer in consensus peers. Signers are going to sign it one by one. When the signatures is enough, the transaction would be send to Poly automaticly.
+
+### Create Transaction To Sync NEO Genesis Header
+
+Create a poly transaction for syncing NEO genesis header to Poly. You need to set the cross-chain chain-id of NEO and the height of NEO header. 
+
+Run the follow and get the raw transaction:
+
+```
+./toolbox poly header_sync create_sync_neo_genesis_hdr_tx [neo_chain_id] [neo_hdr_height] --neo_rpc="http://neo_rpc" --consensus_public_keys=pub1,pub2,pub3
+```
+
+Next sign it by `./toolbox poly header_sync sign_poly_multisig_tx`.
 
 ### Sync Poly Genesis Header to Switcheo
 

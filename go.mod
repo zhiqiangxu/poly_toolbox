@@ -12,4 +12,5 @@ require (
 	github.com/polynetwork/poly-go-sdk v0.0.0-20200729103825-af447ef53ef0
 	github.com/spf13/cobra v1.0.0
 	github.com/tendermint/tendermint v0.33.7
+	github.com/joeqian10/neo-gogogo v0.0.0-20200811090937-d8aab8600241
 )
