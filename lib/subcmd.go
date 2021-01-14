@@ -268,6 +268,7 @@ func RegisterSideChainCmd() *cobra.Command {
 	c.Flags().String(Name, "", "set chain name")
 	c.Flags().Uint64(BlkToWait, 1, "set block number to confirm a transacion on this chain")
 	c.Flags().String(CMCC, "", "set cmcc address")
+	c.Flags().String(ExtraInfo, "", "extra info for this chain in json")
 
 	return c
 }
@@ -300,6 +301,7 @@ func UpdateSideChainCmd() *cobra.Command {
 	c.Flags().String(Name, "", "set chain name")
 	c.Flags().Uint64(BlkToWait, 1, "set block number to confirm a transacion on this chain")
 	c.Flags().String(CMCC, "", "set cmcc address")
+	c.Flags().String(ExtraInfo, "", "extra info for this chain in json")
 
 	return c
 }
@@ -357,6 +359,7 @@ func PolyHeaderSyncCmd() *cobra.Command {
 		CreateSyncEthGenesisHdrTxCmd(),
 		CreateSyncSwticheoGenesisHdrTxCmd(),
 		CreateSyncNeoGenesisHdrTxCmd(),
+		CreateSyncBscGenesisHdrTxCmd(),
 		SignPolyMultiSigTxCmd())
 	return sm
 }
@@ -391,11 +394,27 @@ func CreateSyncEthGenesisHdrTxCmd() *cobra.Command {
 	return c
 }
 
+func CreateSyncBscGenesisHdrTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "create_sync_bsc_genesis_hdr_tx [bsc_chain_id] [bsc_epoch_hdr_height]",
+		Short: "create transaction to sync bsc header to Poly.",
+		RunE:  CreateSyncBscGenesisHdrToPolyTx,
+	}
+
+	c.Flags().String(BscRpcAddr, "", "bsc node RPC address")
+	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
+	_ = c.MarkFlagRequired(ConsensusPubKeys)
+	_ = c.MarkFlagRequired(BscRpcAddr)
+
+	return c
+}
+
 func CreateSyncSwticheoGenesisHdrTxCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "create_sync_switcheo_genesis_hdr_tx [swth_chain_id] [swth_hdr_height]",
 		Short: "create transaction to sync Switcheo header to Poly.",
 		RunE:  CreateSyncSwthGenesisHdrToPolyTx,
+		Args:  cobra.ExactArgs(2),
 	}
 
 	c.Flags().String(SwitcheoRpcAddr, "", "Switcheo node RPC address")
@@ -420,7 +439,7 @@ func CreateSyncNeoGenesisHdrTxCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "create_sync_neo_genesis_hdr_tx [neo_chain_id] [height]",
 		Short: "create transaction to sync NEO header to Poly.",
-		RunE: CreateSyncNeoGenesisHdrTx,
+		RunE:  CreateSyncNeoGenesisHdrTx,
 	}
 
 	c.Flags().String(NeoRpcAddr, "", "NEO node RPC address")
@@ -435,13 +454,13 @@ func SwitcheoCmd() *cobra.Command {
 	sc := &cobra.Command{
 		Use:   "switcheo",
 		Short: "swticheo subcommands",
-		Long:  "This command handles all functions about Switcheo, like syncing " +
+		Long: "This command handles all functions about Switcheo, like syncing " +
 			"genesis headers of Poly to Switcheo, etc. ",
 	}
 
 	sc.PersistentFlags().String(SwitcheoRpcAddr, "", "switcheo rpc address")
 	sc.PersistentFlags().String(SwitcheoWallet, "", "switcheo wallet path")
-	sc.PersistentFlags().String(SignerWalletPwd, "", "switcheo wallet password")
+	sc.PersistentFlags().String(SwitcheoWalletPwd, "", "switcheo wallet password")
 
 	sc.AddCommand(
 		SyncPolyGenesisHdrToSwitcheoCmd())
@@ -453,7 +472,7 @@ func SyncPolyGenesisHdrToSwitcheoCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "sync_poly_genesis_hdr_to_switcheo [height] [swth_gas] [swth_price]",
 		Short: "sync genesis header of poly to switcheo",
-		RunE: SyncPolyHdrToSwitcheo,
+		RunE:  SyncPolyHdrToSwitcheo,
 		Args:  cobra.ExactArgs(3),
 	}
 

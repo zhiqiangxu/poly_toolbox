@@ -54,6 +54,14 @@ Register a side chain to Poly cross-chain system.
 ./toolbox poly side_chain_manager register_side_chain --chain_id=[number] --router=[number] --name=[name] --blocks_to_wait=1 --CMCC="hex" --poly_rpc_addr="http://poly_rpc:port" --signer_wallet_path=/path/to/wallet.dat
 ```
 
+For those chains with `extra_info` field, we need to add one more flag `--extra`. For example.
+
+```
+./toolbox poly side_chain_manager register_side_chain --chain_id=[number] --router=[number] --name=[name] --blocks_to_wait=1 --extra='json' --CMCC="hex" --poly_rpc_addr="http://poly_rpc:port" --signer_wallet_path=/path/to/wallet.dat
+```
+
+The extra info should be a string in json format, like `{"ChainID":6}`.
+
 ### Approve Side Chain Registration 
 
 Consensus account can approve registration of a side chain with the chain-id.
@@ -98,6 +106,30 @@ Run the follow and get the raw transaction:
 
 ```
 ./toolbox poly header_sync create_sync_neo_genesis_hdr_tx [neo_chain_id] [neo_hdr_height] --neo_rpc="http://neo_rpc" --consensus_public_keys=pub1,pub2,pub3
+```
+
+Next sign it by `./toolbox poly header_sync sign_poly_multisig_tx`.
+
+### Create Transaction To Sync Ethereum Genesis Header
+
+Create a poly transaction for syncing Ethereum genesis header to Poly. You need to set the cross-chain chain-id of Ethereum and the height of Ethereum header. 
+
+Run the follow and get the raw transaction:
+
+```
+./toolbox poly header_sync create_sync_eth_genesis_hdr_tx [eth_chain_id] [eth_hdr_height] --eth_rpc="http://eth_rpc" --consensus_public_keys=pub1,pub2,pub3
+```
+
+Next sign it by `./toolbox poly header_sync sign_poly_multisig_tx`.
+
+### Create Transaction To Sync BSC Genesis Header
+
+Create a poly transaction for syncing BSC genesis header to Poly. You need to set the cross-chain chain-id of BSC and the height of BSC header. 
+
+Run the follow and get the raw transaction:
+
+```
+./toolbox poly header_sync create_sync_bsc_genesis_hdr_tx [bsc_chain_id] [bsc_epoch_hdr_height] --bsc_rpc="http://bsc_rpc" --consensus_public_keys=pub1,pub2,pub3
 ```
 
 Next sign it by `./toolbox poly header_sync sign_poly_multisig_tx`.

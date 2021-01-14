@@ -18,6 +18,7 @@ package lib
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	types2 "github.com/cosmos/cosmos-sdk/types"
 	"github.com/joeqian10/neo-gogogo/block"
@@ -33,10 +34,12 @@ import (
 	"github.com/polynetwork/poly/core/payload"
 	"github.com/polynetwork/poly/core/types"
 	"github.com/polynetwork/poly/native/service/governance/node_manager"
+	"github.com/polynetwork/poly/native/service/header_sync/bsc"
 	"github.com/polynetwork/poly/native/service/header_sync/cosmos"
 	"github.com/polynetwork/poly/native/states"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/rpc/client/http"
+	"math/big"
 	"strconv"
 	"strings"
 )
@@ -171,12 +174,12 @@ func CreateCommitDposTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pubKeys := make([]keypair.PublicKey, 0)
 	str, err := cmd.Flags().GetString(ConsensusPubKeys)
 	pks := strings.Split(str, ",")
 	if err != nil {
 		return err
 	}
+	pubKeys := make([]keypair.PublicKey, 0, len(pks))
 	for i, v := range pks {
 		pk, err := vconfig.Pubkey(v)
 		if err != nil {
@@ -187,7 +190,7 @@ func CreateCommitDposTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16((5*len(pubKeys) + 6) / 7),
+		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -264,12 +267,12 @@ func CreateUpdateConfigTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pubKeys := make([]keypair.PublicKey, 0)
 	str, err := cmd.Flags().GetString(ConsensusPubKeys)
 	pks := strings.Split(str, ",")
 	if err != nil {
 		return err
 	}
+	pubKeys := make([]keypair.PublicKey, 0, len(pks))
 	for i, v := range pks {
 		pk, err := vconfig.Pubkey(v)
 		if err != nil {
@@ -280,7 +283,7 @@ func CreateUpdateConfigTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16((5*len(pubKeys) + 6) / 7),
+		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -475,6 +478,11 @@ func RegisterSideChain(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	extra, err := cmd.Flags().GetString(ExtraInfo)
+	if err != nil {
+		return err
+	}
+
 	cmcc = strings.TrimPrefix(cmcc, "0x")
 	var cmccAddr []byte
 	if cmcc == "" {
@@ -489,7 +497,13 @@ func RegisterSideChain(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	txhash, err := poly.Native.Scm.RegisterSideChain(acc.Address, chainId, router, name, num, cmccAddr, acc)
+
+	var txhash common.Uint256
+	if extra == "" {
+		txhash, err = poly.Native.Scm.RegisterSideChain(acc.Address, chainId, router, name, num, cmccAddr, acc)
+	} else {
+		txhash, err = poly.Native.Scm.RegisterSideChainExt(acc.Address, chainId, router, name, num, cmccAddr, []byte(extra), acc)
+	}
 	if err != nil {
 		return err
 	}
@@ -540,6 +554,11 @@ func UpdateSideChain(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	extra, err := cmd.Flags().GetString(ExtraInfo)
+	if err != nil {
+		return err
+	}
+
 	cmcc = strings.TrimPrefix(cmcc, "0x")
 	var cmccAddr []byte
 	if cmcc == "" {
@@ -554,7 +573,13 @@ func UpdateSideChain(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	txhash, err := poly.Native.Scm.UpdateSideChain(acc.Address, chainId, router, name, num, cmccAddr, acc)
+
+	var txhash common.Uint256
+	if extra == "" {
+		txhash, err = poly.Native.Scm.UpdateSideChain(acc.Address, chainId, router, name, num, cmccAddr, acc)
+	} else {
+		txhash, err = poly.Native.Scm.UpdateSideChainExt(acc.Address, chainId, router, name, num, cmccAddr, []byte(extra), acc)
+	}
 	if err != nil {
 		return err
 	}
@@ -647,12 +672,12 @@ func CreateSyncOntGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pubKeys := make([]keypair.PublicKey, 0)
 	str, err := cmd.Flags().GetString(ConsensusPubKeys)
 	pks := strings.Split(str, ",")
 	if err != nil {
 		return err
 	}
+	pubKeys := make([]keypair.PublicKey, 0, len(pks))
 	for i, v := range pks {
 		pk, err := vconfig.Pubkey(v)
 		if err != nil {
@@ -663,7 +688,7 @@ func CreateSyncOntGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16((5*len(pubKeys) + 6) / 7),
+		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -705,12 +730,12 @@ func CreateSyncEthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pubKeys := make([]keypair.PublicKey, 0)
 	str, err := cmd.Flags().GetString(ConsensusPubKeys)
 	pks := strings.Split(str, ",")
 	if err != nil {
 		return err
 	}
+	pubKeys := make([]keypair.PublicKey, 0, len(pks))
 	for i, v := range pks {
 		pk, err := vconfig.Pubkey(v)
 		if err != nil {
@@ -721,7 +746,85 @@ func CreateSyncEthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16((5*len(pubKeys) + 6) / 7),
+		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
+		PubKeys: pubKeys,
+	})
+	sink := common.NewZeroCopySink(nil)
+	if err := tx.Serialization(sink); err != nil {
+		return err
+	}
+
+	fmt.Printf("raw transaction is %s\nNeed to send this transaction to every single consensus peer to sign. \n",
+		hex.EncodeToString(sink.Bytes()))
+	return nil
+}
+
+func CreateSyncBscGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
+	id, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+	h, err := strconv.ParseUint(args[1], 10, 64)
+	if err != nil {
+		return err
+	}
+
+	ethRpc, err := cmd.Flags().GetString(BscRpcAddr)
+	if err != nil {
+		return err
+	}
+	et := NewEthTools(ethRpc)
+	hdr, err := et.GetBlockHeader(h)
+	if err != nil {
+		return err
+	}
+	phdr, err := et.GetBlockHeader(h - 200)
+	if err != nil {
+		return err
+	}
+	pvalidators, err := bsc.ParseValidators(phdr.Extra[32 : len(phdr.Extra)-65])
+	if err != nil {
+		return err
+	}
+
+	if len(hdr.Extra) <= 65+32 {
+		return fmt.Errorf("invalid epoch header at height: %d", h)
+	}
+	if len(phdr.Extra) <= 65+32 {
+		return fmt.Errorf("invalid epoch header at height: %d", h-200)
+	}
+
+	genesisHeader := bsc.GenesisHeader{Header: *hdr, PrevValidators: []bsc.HeightAndValidators{
+		{Height: big.NewInt(int64(h - 200)), Validators: pvalidators},
+	}}
+	raw, err := json.Marshal(genesisHeader)
+	if err != nil {
+		return err
+	}
+
+	poly := poly_go_sdk.NewPolySdk()
+	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
+	if err != nil {
+		return err
+	}
+
+	str, err := cmd.Flags().GetString(ConsensusPubKeys)
+	pks := strings.Split(str, ",")
+	if err != nil {
+		return err
+	}
+	pubKeys := make([]keypair.PublicKey, 0, len(pks))
+	for i, v := range pks {
+		pk, err := vconfig.Pubkey(v)
+		if err != nil {
+			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
+		}
+		pubKeys = append(pubKeys, pk)
+	}
+
+	tx.Sigs = append(tx.Sigs, types.Sig{
+		SigData: make([][]byte, 0),
+		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -777,12 +880,12 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pubKeys := make([]keypair.PublicKey, 0)
 	str, err := cmd.Flags().GetString(ConsensusPubKeys)
 	pks := strings.Split(str, ",")
 	if err != nil {
 		return err
 	}
+	pubKeys := make([]keypair.PublicKey, 0, len(pks))
 	for i, v := range pks {
 		pk, err := vconfig.Pubkey(v)
 		if err != nil {
@@ -793,7 +896,7 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16((5*len(pubKeys) + 6) / 7),
+		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -840,12 +943,12 @@ func CreateSyncNeoGenesisHdrTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pubKeys := make([]keypair.PublicKey, 0)
 	str, err := cmd.Flags().GetString(ConsensusPubKeys)
 	pks := strings.Split(str, ",")
 	if err != nil {
 		return err
 	}
+	pubKeys := make([]keypair.PublicKey, 0, len(pks))
 	for i, v := range pks {
 		pk, err := vconfig.Pubkey(v)
 		if err != nil {
@@ -856,7 +959,7 @@ func CreateSyncNeoGenesisHdrTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16((5*len(pubKeys) + 6) / 7),
+		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -926,7 +1029,7 @@ func SyncPolyHdrToSwitcheo(cmd *cobra.Command, args []string) error {
 		fmt.Println("Pleasae input your switcheo wallet password...")
 		pwd, err := password.GetPassword()
 		if err != nil {
-			return fmt.Errorf("getPassword error:", err)
+			return fmt.Errorf("getPassword error: %v", err)
 		}
 		swthPwd = string(pwd)
 	}

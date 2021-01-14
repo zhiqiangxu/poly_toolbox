@@ -65,13 +65,15 @@ const (
 	Name                  = "name"
 	BlkToWait             = "blocks_to_wait"
 	CMCC                  = "CMCC"
+	ExtraInfo             = "extra"
 	OntRpcAddr            = "ont_rpc"
 	EthRpcAddr            = "eth_rpc"
+	BscRpcAddr            = "bsc_rpc"
 	SwitcheoRpcAddr       = "switcheo_rpc"
 	NeoRpcAddr            = "neo_rpc"
 	SwitcheoWallet        = "switcheo_wallet"
 	SwitcheoWalletPwd     = "switcheo_wallet_pwd"
-	SwitcheoCosmosChainID = "switcheochain"
+	SwitcheoCosmosChainID = "switcheo-tradehub-1"
 	BroadcastConnTimeOut  = "connection timed out"
 	SeqErr                = "verify correct account sequence and chain-id"
 )
@@ -79,7 +81,7 @@ const (
 func GetPolyAccountByPassword(asdk *poly_go_sdk.PolySdk, path, pwdStr string) (*poly_go_sdk.Account, error) {
 	wallet, err := asdk.OpenWallet(path)
 	if err != nil {
-		return nil, fmt.Errorf("open wallet error:", err)
+		return nil, fmt.Errorf("open wallet error: %v", err)
 	}
 	var pwd []byte
 	if pwdStr != "" {
@@ -88,12 +90,12 @@ func GetPolyAccountByPassword(asdk *poly_go_sdk.PolySdk, path, pwdStr string) (*
 		fmt.Println("Pleasae input your poly wallet password...")
 		pwd, err = password.GetPassword()
 		if err != nil {
-			return nil, fmt.Errorf("getPassword error:", err)
+			return nil, fmt.Errorf("getPassword error: %v", err)
 		}
 	}
 	user, err := wallet.GetDefaultAccount(pwd)
 	if err != nil {
-		return nil, fmt.Errorf("getDefaultAccount error:", err)
+		return nil, fmt.Errorf("getDefaultAccount error: %v", err)
 	}
 	return user, nil
 }
@@ -422,6 +424,11 @@ type CosmosAcc struct {
 }
 
 func NewCosmosAcc(wallet, pwd string, cli *http2.HTTP, cdc *codec.Codec) (*CosmosAcc, error) {
+	config := types3.GetConfig()
+	config.SetBech32PrefixForAccount("swth", "swthpub")
+	config.SetBech32PrefixForValidator("swthvaloper", "swthvaloperpub")
+	config.SetBech32PrefixForConsensusNode("swthvalcons", "swthvalconspub")
+
 	acc := &CosmosAcc{}
 	bz, err := ioutil.ReadFile(wallet)
 	if err != nil {
@@ -430,7 +437,7 @@ func NewCosmosAcc(wallet, pwd string, cli *http2.HTTP, cdc *codec.Codec) (*Cosmo
 
 	privKey, _, err := mintkey.UnarmorDecryptPrivKey(string(bz), string(pwd))
 	if err != nil {
-		return nil, fmt.Errorf("failed to decrypt private key: v", err)
+		return nil, fmt.Errorf("failed to decrypt private key: %v", err)
 	}
 
 	acc.PrivateKey = privKey

@@ -111,6 +111,7 @@ github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf/go.mod h1:E3G3o1h8I7cfc
 github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
 github.com/cosmos/cosmos-sdk v0.38.4 h1:jPZOvhMQkm7wwwzcLxuluhVpKfuIgddNGt999pAiz/Y=
 github.com/cosmos/cosmos-sdk v0.38.4/go.mod h1:rzWOofbKfRt3wxiylmYWEFHnxxGj0coyqgWl2I9obAw=
+github.com/cosmos/cosmos-sdk v0.39.0/go.mod h1:3iKiqnQ48T0UG4IDw9EM8utQSwItutLUkmGkRSWpS5U=
 github.com/cosmos/cosmos-sdk v0.39.1 h1:vhjf9PZh9ph8btAj9aBpHoVITgVVjNBpM3x5Gl/Vwac=
 github.com/cosmos/cosmos-sdk v0.39.1/go.mod h1:ry2ROl5n+f2/QXpKJo3rdWNJwll00z7KhIVcxNcl16M=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d h1:49RLWk1j44Xu4fjHb6JFYmeUnDORVwHNkDxaQ0ctCVU=
@@ -173,6 +174,8 @@ github.com/gcash/bchd v0.14.7/go.mod h1:Gk/O1ktRVW5Kao0RsnVXp3bWxeYQadqawZ1Im9HE
 github.com/gcash/bchd v0.15.2/go.mod h1:k9wIjgwnhbrAw+ruIPZ2tHZMzfFNdyUnORZZX7lqXGY=
 github.com/gcash/bchd v0.16.4 h1:+aq3sk3MDTLLwfDldvJaQBbpALCiDMH1bT32qIeHYos=
 github.com/gcash/bchd v0.16.4/go.mod h1:gR67ljCexTNwbKYN3wjbRHi9lYLp4rMomy1UQ3E1USA=
+github.com/gcash/bchd v0.16.5 h1:hkLUecfvcf2wf5vy05vp5X0OG9I5xWKnxdHU2/KI8PM=
+github.com/gcash/bchd v0.16.5/go.mod h1:gR67ljCexTNwbKYN3wjbRHi9lYLp4rMomy1UQ3E1USA=
 github.com/gcash/bchlog v0.0.0-20180913005452-b4f036f92fa6 h1:3pZvWJ8MSfWstGrb8Hfh4ZpLyZNcXypcGx2Ju4ZibVM=
 github.com/gcash/bchlog v0.0.0-20180913005452-b4f036f92fa6/go.mod h1:PpfmXTLfjRp7Tf6v/DCGTRXHz+VFbiRcsoUxi7HvwlQ=
 github.com/gcash/bchutil v0.0.0-20190625002603-800e62fe9aff/go.mod h1:zXSP0Fg2L52wpSEDApQDQMiSygnQiK5HDquDl0a5BHg=
@@ -312,6 +315,7 @@ github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht
 github.com/jmhodges/levigo v1.0.0/go.mod h1:Q6Qx+uH3RAqyK4rFQroq9RL7mdkABMcfhEI+nNuzMJQ=
 github.com/joeqian10/neo-gogogo v0.0.0-20200611102831-c17de5e1f0f8 h1:C+PIS6p7oQ4DwT+1IJkIvS+BMLn9TodglcqcGzhE+fQ=
 github.com/joeqian10/neo-gogogo v0.0.0-20200611102831-c17de5e1f0f8/go.mod h1:1fVDp4U1ROZQBRIooecbGNHHJpfs3bG9528sqlZ096g=
+github.com/joeqian10/neo-gogogo v0.0.0-20200716075409-923bd4879b43/go.mod h1:1fVDp4U1ROZQBRIooecbGNHHJpfs3bG9528sqlZ096g=
 github.com/joeqian10/neo-gogogo v0.0.0-20200811090937-d8aab8600241 h1:kfTkgo18r3VFWrr3z8arDU05yHiX/nU1ZaDgEApinMo=
 github.com/joeqian10/neo-gogogo v0.0.0-20200811090937-d8aab8600241/go.mod h1:1fVDp4U1ROZQBRIooecbGNHHJpfs3bG9528sqlZ096g=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
@@ -454,8 +458,12 @@ github.com/polynetwork/poly v0.0.0-20200710095239-0596a3d7afe5/go.mod h1:UzlGEWk
 github.com/polynetwork/poly v0.0.0-20200715030435-4f1d1a0adb44/go.mod h1:UzlGEWk0eCGsuMJOZfBoZjRbmu4Yw/SudKAIFe1gPnY=
 github.com/polynetwork/poly v0.0.0-20200722075529-eea88acb37b2 h1:t4zDeTSvzn8Mo2jxUwg8WImqih3ZZWoytTFcnbpGZuU=
 github.com/polynetwork/poly v0.0.0-20200722075529-eea88acb37b2/go.mod h1:UzlGEWk0eCGsuMJOZfBoZjRbmu4Yw/SudKAIFe1gPnY=
+github.com/polynetwork/poly v0.0.0-20210112063446-24e3d053e9d6 h1:1BIn6sq7FC75xfoEsee2jvJp8be52puItmJJfLyFQ1s=
+github.com/polynetwork/poly v0.0.0-20210112063446-24e3d053e9d6/go.mod h1:SrFSYe/3uWkouGvoSGkjDPm5sNT95dSFZkQtXRun148=
 github.com/polynetwork/poly-go-sdk v0.0.0-20200729103825-af447ef53ef0 h1:pWDLHm20+92Oa3kIDSKPJBtZeLe1/ZcKfcSDrw2fpZQ=
 github.com/polynetwork/poly-go-sdk v0.0.0-20200729103825-af447ef53ef0/go.mod h1:a1wMo/VFoUAKX2yVjipvFug6Yu5BPhf/2tP5xywqfIc=
+github.com/polynetwork/poly-go-sdk v0.0.0-20210114035303-84e1615f4ad4 h1:jjBIPfjOI1dBl3lLn+zgFY61KPIyCaHMegjKhvBW+VA=
+github.com/polynetwork/poly-go-sdk v0.0.0-20210114035303-84e1615f4ad4/go.mod h1:19WVxn2sLemZZgYFJh+AIC57WGLu1D0Q8qUTlGQcK+0=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829/go.mod h1:p2iRAGwDERtqlqzRXnrOVns+ignqQo//hLXqYxZYVNs=
@@ -584,6 +592,7 @@ github.com/tendermint/tendermint v0.33.2/go.mod h1:25DqB7YvV1tN3tHsjWoc2vFtlwICf
 github.com/tendermint/tendermint v0.33.3 h1:6lMqjEoCGejCzAghbvfQgmw87snGSqEhDTo/jw+W8CI=
 github.com/tendermint/tendermint v0.33.3/go.mod h1:25DqB7YvV1tN3tHsjWoc2vFtlwICfrub9XO6UBO+4xk=
 github.com/tendermint/tendermint v0.33.5/go.mod h1:0yUs9eIuuDq07nQql9BmI30FtYGcEC60Tu5JzB5IezM=
+github.com/tendermint/tendermint v0.33.6/go.mod h1:0yUs9eIuuDq07nQql9BmI30FtYGcEC60Tu5JzB5IezM=
 github.com/tendermint/tendermint v0.33.7 h1:b5CQD8ggDtl4u0EbXzabi0MaOw9NrcXker6ijEkAE74=
 github.com/tendermint/tendermint v0.33.7/go.mod h1:0yUs9eIuuDq07nQql9BmI30FtYGcEC60Tu5JzB5IezM=
 github.com/tendermint/tm-db v0.4.1/go.mod h1:JsJ6qzYkCGiGwm5GHl/H5GLI9XLb6qZX7PRe425dHAY=
@@ -641,6 +650,8 @@ golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79/go.mod h1:LzIPMQfyMNhhGPh
 golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 h1:psW17arqaxU48Z5kZ0CQnkZWQJsqcURM6tKiBApRjXI=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
+golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de h1:ikNHVSjEfnvz6sxdSPCaPt572qowuyMDMJLLm3Db3ig=
+golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190227174305-5b3e6a55c961/go.mod h1:wehouNa3lNwaWXcvxsM5YxQ5yQlVC4a0KAMCusXpPoU=
@@ -731,6 +742,7 @@ golang.org/x/tools v0.0.0-20190524140312-2c0ae7006135/go.mod h1:RgjU9mgBXZiqYHBn
 golang.org/x/tools v0.0.0-20190621195816-6e04913cbbac/go.mod h1:/rFqwRUd4F7ZHNgwSSTFct+R/Kf4OFW1sUzUTQQTgfc=
 golang.org/x/tools v0.0.0-20191029041327-9cc4af7d6b2c/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191029190741-b9c20aec41a5/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
+golang.org/x/tools v0.0.0-20200103221440-774c71fcf114 h1:DnSr2mCsxyCE6ZgIkmcWUQY2R5cH/6wL7eIxEmQOMSE=
 golang.org/x/tools v0.0.0-20200103221440-774c71fcf114/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
