@@ -190,7 +190,7 @@ func CreateCommitDposTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -283,7 +283,7 @@ func CreateUpdateConfigTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -688,7 +688,7 @@ func CreateSyncOntGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -746,7 +746,7 @@ func CreateSyncEthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -824,7 +824,7 @@ func CreateSyncBscGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -896,7 +896,7 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -959,7 +959,7 @@ func CreateSyncNeoGenesisHdrTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)+(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
