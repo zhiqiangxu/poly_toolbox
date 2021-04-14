@@ -360,6 +360,7 @@ func PolyHeaderSyncCmd() *cobra.Command {
 		CreateSyncSwticheoGenesisHdrTxCmd(),
 		CreateSyncNeoGenesisHdrTxCmd(),
 		CreateSyncBscGenesisHdrTxCmd(),
+		CreateSyncMscGenesisHdrTxCmd(),
 		SignPolyMultiSigTxCmd())
 	return sm
 }
@@ -405,6 +406,21 @@ func CreateSyncBscGenesisHdrTxCmd() *cobra.Command {
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
 	_ = c.MarkFlagRequired(ConsensusPubKeys)
 	_ = c.MarkFlagRequired(BscRpcAddr)
+
+	return c
+}
+
+func CreateSyncMscGenesisHdrTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "create_sync_msc_genesis_hdr_tx [msc_chain_id] [msc_epoch_hdr_height]",
+		Short: "create transaction to sync msc header to Poly.",
+		RunE:  CreateSyncMscGenesisHdrToPolyTx,
+	}
+
+	c.Flags().String(MscRpcAddr, "", "msc node RPC address")
+	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
+	_ = c.MarkFlagRequired(ConsensusPubKeys)
+	_ = c.MarkFlagRequired(MscRpcAddr)
 
 	return c
 }
