@@ -20,17 +20,21 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"strconv"
+	"strings"
+
 	types2 "github.com/cosmos/cosmos-sdk/types"
 	"github.com/joeqian10/neo-gogogo/block"
 	"github.com/joeqian10/neo-gogogo/helper/io"
 	"github.com/joeqian10/neo-gogogo/rpc"
 	"github.com/ontio/ontology-crypto/keypair"
-	"github.com/ontio/ontology-go-sdk"
+	ontology_go_sdk "github.com/ontio/ontology-go-sdk"
 	"github.com/polynetwork/cosmos-poly-module/headersync"
-	"github.com/polynetwork/poly-go-sdk"
+	poly_go_sdk "github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/poly/common"
 	"github.com/polynetwork/poly/common/password"
-	"github.com/polynetwork/poly/consensus/vbft/config"
+	vconfig "github.com/polynetwork/poly/consensus/vbft/config"
 	"github.com/polynetwork/poly/core/payload"
 	"github.com/polynetwork/poly/core/types"
 	"github.com/polynetwork/poly/native/service/governance/node_manager"
@@ -39,9 +43,6 @@ import (
 	"github.com/polynetwork/poly/native/states"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/rpc/client/http"
-	"math/big"
-	"strconv"
-	"strings"
 )
 
 func RegisterCandidate(cmd *cobra.Command, args []string) error {
@@ -190,7 +191,7 @@ func CreateCommitDposTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys) - (len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -283,7 +284,7 @@ func CreateUpdateConfigTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys) - (len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -688,7 +689,7 @@ func CreateSyncOntGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys) - (len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -746,7 +747,69 @@ func CreateSyncEthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys) - (len(pubKeys)-1)/3),
+		PubKeys: pubKeys,
+	})
+	sink := common.NewZeroCopySink(nil)
+	if err := tx.Serialization(sink); err != nil {
+		return err
+	}
+
+	fmt.Printf("raw transaction is %s\nNeed to send this transaction to every single consensus peer to sign. \n",
+		hex.EncodeToString(sink.Bytes()))
+	return nil
+}
+
+func CreateSyncMscGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
+	id, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+
+	h, err := strconv.ParseUint(args[1], 10, 64)
+	if err != nil {
+		return err
+	}
+
+	ethRpc, err := cmd.Flags().GetString(MscRpcAddr)
+	if err != nil {
+		return err
+	}
+	et := NewEthTools(ethRpc)
+
+	hdr, err := et.GetBlockHeader(h)
+	if err != nil {
+		return err
+	}
+
+	raw, err := json.Marshal(hdr)
+	if err != nil {
+		return err
+	}
+
+	poly := poly_go_sdk.NewPolySdk()
+	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
+	if err != nil {
+		return err
+	}
+
+	str, err := cmd.Flags().GetString(ConsensusPubKeys)
+	pks := strings.Split(str, ",")
+	if err != nil {
+		return err
+	}
+	pubKeys := make([]keypair.PublicKey, 0, len(pks))
+	for i, v := range pks {
+		pk, err := vconfig.Pubkey(v)
+		if err != nil {
+			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
+		}
+		pubKeys = append(pubKeys, pk)
+	}
+
+	tx.Sigs = append(tx.Sigs, types.Sig{
+		SigData: make([][]byte, 0),
+		M:       uint16(len(pubKeys) - (len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -824,7 +887,7 @@ func CreateSyncBscGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys) - (len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -896,7 +959,7 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys) - (len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
@@ -959,7 +1022,7 @@ func CreateSyncNeoGenesisHdrTx(cmd *cobra.Command, args []string) error {
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
 		SigData: make([][]byte, 0),
-		M:       uint16(len(pubKeys)-(len(pubKeys)-1)/3),
+		M:       uint16(len(pubKeys) - (len(pubKeys)-1)/3),
 		PubKeys: pubKeys,
 	})
 	sink := common.NewZeroCopySink(nil)
