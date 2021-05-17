@@ -361,6 +361,7 @@ func PolyHeaderSyncCmd() *cobra.Command {
 		CreateSyncNeoGenesisHdrTxCmd(),
 		CreateSyncBscGenesisHdrTxCmd(),
 		CreateSyncMscGenesisHdrTxCmd(),
+		CreateSyncOkGenesisHdrTxCmd(),
 		SignPolyMultiSigTxCmd())
 	return sm
 }
@@ -417,10 +418,8 @@ func CreateSyncOkGenesisHdrTxCmd() *cobra.Command {
 		RunE:  CreateSyncOkGenesisHdrToPolyTx,
 	}
 
-	c.Flags().String(OkRpcAddr, "", "ok node RPC address")
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
 	_ = c.MarkFlagRequired(ConsensusPubKeys)
-	_ = c.MarkFlagRequired(OkRpcAddr)
 
 	return c
 }
