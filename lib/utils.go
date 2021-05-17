@@ -71,6 +71,7 @@ const (
 	EthRpcAddr            = "eth_rpc"
 	BscRpcAddr            = "bsc_rpc"
 	MscRpcAddr            = "msc_rpc"
+	OkRpcAddr            = "ok_rpc"
 	SwitcheoRpcAddr       = "switcheo_rpc"
 	NeoRpcAddr            = "neo_rpc"
 	SwitcheoWallet        = "switcheo_wallet"

@@ -410,6 +410,21 @@ func CreateSyncBscGenesisHdrTxCmd() *cobra.Command {
 	return c
 }
 
+func CreateSyncOkGenesisHdrTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "create_sync_ok_genesis_hdr_tx [ok_chain_id]",
+		Short: "create transaction to sync ok header to Poly.",
+		RunE:  CreateSyncOkGenesisHdrToPolyTx,
+	}
+
+	c.Flags().String(OkRpcAddr, "", "ok node RPC address")
+	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
+	_ = c.MarkFlagRequired(ConsensusPubKeys)
+	_ = c.MarkFlagRequired(OkRpcAddr)
+
+	return c
+}
+
 func CreateSyncMscGenesisHdrTxCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "create_sync_msc_genesis_hdr_tx [msc_chain_id] [msc_epoch_hdr_height]",
