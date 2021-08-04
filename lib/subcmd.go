@@ -362,6 +362,7 @@ func PolyHeaderSyncCmd() *cobra.Command {
 		CreateSyncBscGenesisHdrTxCmd(),
 		CreateSyncMscGenesisHdrTxCmd(),
 		CreateSyncOkGenesisHdrTxCmd(),
+		CreateSyncRawGenesisHdrTxCmd(),
 		SignPolyMultiSigTxCmd())
 	return sm
 }
@@ -416,6 +417,19 @@ func CreateSyncOkGenesisHdrTxCmd() *cobra.Command {
 		Use:   "create_sync_ok_genesis_hdr_tx [ok_chain_id]",
 		Short: "create transaction to sync ok header to Poly.",
 		RunE:  CreateSyncOkGenesisHdrToPolyTx,
+	}
+
+	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
+	_ = c.MarkFlagRequired(ConsensusPubKeys)
+
+	return c
+}
+
+func CreateSyncRawGenesisHdrTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "create_sync_raw_genesis_hdr_tx [chain_id] [raw_hex_file]",
+		Short: "create transaction to sync raw genesis header to Poly.",
+		RunE:  CreateSyncRawGenesisHdrTxToPolyTx,
 	}
 
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")

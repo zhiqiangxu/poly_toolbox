@@ -901,6 +901,56 @@ func CreateSyncBscGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func CreateSyncRawGenesisHdrTxToPolyTx(cmd *cobra.Command, args []string) error {
+	id, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+
+	rawHex, err := ioutil.ReadFile(args[1])
+	if err != nil {
+		return err
+	}
+	raw, err := hex.DecodeString(strings.TrimSpace(string(rawHex)))
+	if err != nil {
+		return err
+	}
+
+	poly := poly_go_sdk.NewPolySdk()
+	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
+	if err != nil {
+		return err
+	}
+
+	str, err := cmd.Flags().GetString(ConsensusPubKeys)
+	pks := strings.Split(str, ",")
+	if err != nil {
+		return err
+	}
+	pubKeys := make([]keypair.PublicKey, 0, len(pks))
+	for i, v := range pks {
+		pk, err := vconfig.Pubkey(v)
+		if err != nil {
+			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
+		}
+		pubKeys = append(pubKeys, pk)
+	}
+
+	tx.Sigs = append(tx.Sigs, types.Sig{
+		SigData: make([][]byte, 0),
+		M:       uint16(len(pubKeys) - (len(pubKeys)-1)/3),
+		PubKeys: pubKeys,
+	})
+	sink := common.NewZeroCopySink(nil)
+	if err := tx.Serialization(sink); err != nil {
+		return err
+	}
+
+	fmt.Printf("raw transaction is %s\nNeed to send this transaction to every single consensus peer to sign. \n",
+		hex.EncodeToString(sink.Bytes()))
+	return nil
+}
+
 func CreateSyncOkGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	id, err := strconv.ParseUint(args[0], 10, 64)
 	if err != nil {
