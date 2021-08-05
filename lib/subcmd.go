@@ -34,7 +34,7 @@ func PolyCmd() *cobra.Command {
 	nmCmd.PersistentFlags().String(SignerWalletPwd, "", "The password for signer's wallet. "+
 		"If not set here, you will be required to input it. ")
 
-	nmCmd.AddCommand(PolyNMCmd(), PolyRMCmd(), PolySMCmd(), PolyHeaderSyncCmd())
+	nmCmd.AddCommand(PolyNMCmd(), PolyRMCmd(), PolySMCmd(), PolyHeaderSyncCmd(), PolyNSMCmd())
 
 	return nmCmd
 }
@@ -535,3 +535,59 @@ func SyncPolyGenesisHdrToSwitcheoCmd() *cobra.Command {
 //
 //	ec.PersistentFlags().String(EthRpcAddr)
 //}
+
+func PolyNSMCmd() *cobra.Command {
+	rm := &cobra.Command{
+		Use:   "neo3_state_manager",
+		Short: "Neo3 state manager subcommands",
+		Long:  "neo3 state manager controls neo3 state validators. Like registering or removing a state validator.",
+	}
+	rm.AddCommand(
+		RegisterStateValidatorCmd(),
+		ApproveRegisterStateValidatorCmd(),
+		RemoveStateValidatorCmd(),
+		ApproveRemoveStateValidatorCmd())
+	return rm
+}
+
+func RegisterStateValidatorCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "register_state_validator [neo3_state_validators_sep_by_comma]",
+		Short: "register new neo3 state validators",
+		Long:  "You can register new neo3 state validators and toolbox will return the registration ID which is needed when approving.",
+		RunE:  RegisterStateValidator,
+		Args:  cobra.MinimumNArgs(1),
+	}
+	return c
+}
+
+func ApproveRegisterStateValidatorCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "approve_register_StateValidator [id]",
+		Short: "approve registration of proposal ID",
+		Long:  "Consensus accounts approve the registration with the ID returned when registering.",
+		RunE:  ApproveRegisterStateValidator,
+		Args:  cobra.ExactArgs(1),
+	}
+	return c
+}
+
+func RemoveStateValidatorCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "remove_state_validator [neo3_state_validators_sep_by_comma]",
+		Short: "remove neo3 state validators",
+		Long:  "You can remove neo3 state validators and toolbox will return the removal ID which is needed when removing",
+		RunE:  RemoveStateValidator,
+	}
+	return c
+}
+
+func ApproveRemoveStateValidatorCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "approve_remove_state_validator [id]",
+		Short: "approve removing proposal ID",
+		Long:  "Consensus accounts approve the relayer removing with the ID returned when removing.",
+		RunE:  ApproveRemoveStateValidator,
+	}
+	return c
+}

@@ -1250,3 +1250,99 @@ func SyncPolyHdrToSwitcheo(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
+
+func RegisterStateValidator(cmd *cobra.Command, args []string) error {
+	stateValidatorString := args[0]
+	svs := strings.Split(stateValidatorString, ",")
+
+	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	if err != nil {
+		return err
+	}
+	txhash, err := poly.Native.Sm.RegisterStateValidator(svs, acc)
+	if err != nil {
+		return err
+	}
+	WaitPolyTx(txhash, poly)
+	event, err := poly.GetSmartContractEvent(txhash.ToHexString())
+	if err != nil {
+		return err
+	}
+	var id uint64
+	for _, e := range event.Notify {
+		states := e.States.([]interface{})
+		if states[0].(string) == "putStateValidatorApply" {
+			id = uint64(states[1].(float64))
+		}
+	}
+	fmt.Printf("successful to register state validators: %v, and id is: %d, txhash: %s\n", args, id, txhash.ToHexString())
+
+	return nil
+}
+
+func ApproveRegisterStateValidator(cmd *cobra.Command, args []string) error {
+	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	if err != nil {
+		return err
+	}
+	id, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+	txhash, err := poly.Native.Sm.ApproveRegisterStateValidator(id, acc)
+	if err != nil {
+		return err
+	}
+	WaitPolyTx(txhash, poly)
+	fmt.Printf("successful to approve state validators registration id: %d, txhash: %s\n", id, txhash.ToHexString())
+
+	return nil
+}
+
+func RemoveStateValidator(cmd *cobra.Command, args []string) error {
+	stateValidatorString := args[0]
+	svs := strings.Split(stateValidatorString, ",")
+
+	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	if err != nil {
+		return err
+	}
+	txhash, err := poly.Native.Sm.RemoveStateValidator(svs, acc)
+	if err != nil {
+		return err
+	}
+	WaitPolyTx(txhash, poly)
+	event, err := poly.GetSmartContractEvent(txhash.ToHexString())
+	if err != nil {
+		return err
+	}
+	var id uint64
+	for _, e := range event.Notify {
+		states := e.States.([]interface{})
+		if states[0].(string) == "putStateValidatorRemove" {
+			id = uint64(states[1].(float64))
+		}
+	}
+	fmt.Printf("successful to remove state validators: %v, and id is: %d, txhash: %s\n", args, id, txhash.ToHexString())
+
+	return nil
+}
+
+func ApproveRemoveStateValidator(cmd *cobra.Command, args []string) error {
+	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	if err != nil {
+		return err
+	}
+	id, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+	txhash, err := poly.Native.Sm.ApproveRemoveStateValidator(id, acc)
+	if err != nil {
+		return err
+	}
+	WaitPolyTx(txhash, poly)
+	fmt.Printf("successful to approve state validators removal id: %d, txhash: %s\n", id, txhash.ToHexString())
+
+	return nil
+}
