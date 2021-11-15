@@ -170,7 +170,10 @@ func WhiteNode(cmd *cobra.Command, args []string) error {
 }
 
 func CreateCommitDposTx(cmd *cobra.Command, args []string) error {
-	poly := poly_go_sdk.NewPolySdk()
+	poly, _, err := GetPolyAndAccByCmd(cmd)
+	if err != nil {
+		return err
+	}
 	tx, err := poly.Native.Nm.NewCommitDposTransaction()
 	if err != nil {
 		return err
